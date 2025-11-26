@@ -22,11 +22,13 @@ export const startSendOtpConsumer = async () => {
     console.log("✅ Mail Service consumer started, listening for otp emails");
 
     channel.consume(queueName, async (msg) => {
-      if (msg) {
-        try {
-          const { to, subject, body } = JSON.parse(msg.content.toString());
+      if (!msg) return;
+      const payload = JSON.parse(msg.content.toString());
 
-          const transporter = nodemailer.createTransport({
+      try {
+        const { to, subject, body } = payload;
+
+        const transporter = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 465,
             secure: true,
@@ -36,17 +38,24 @@ export const startSendOtpConsumer = async () => {
             },
           });
 
-          await transporter.sendMail({
-            from: "Chat app",
-            to,
-            subject,
-            text: body,
-          });
+        await transporter.sendMail({
+          from: "Chat app",
+          to,
+          subject,
+          text: body,
+        });
 
-          console.log(`OTP mail sent to ${to}`);
+        console.log(`OTP mail sent to ${to}`);
+      } catch (error) {
+        // log the error so we can inspect it, but ACK the message to avoid
+        // redelivery loops (this ensures OTPs are delivered at-most-once).
+        console.log("Failed to send otp (will ack to avoid retries)", error);
+      } finally {
+        // acknowledge the message regardless of send success so it isn't re-delivered
+        try {
           channel.ack(msg);
-        } catch (error) {
-          console.log("Failed to send otp", error);
+        } catch (err) {
+          console.warn("Failed to ack message", err);
         }
       }
     });
