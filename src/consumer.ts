@@ -30,22 +30,22 @@ export const startSendOtpConsumer = async () => {
       try {
         const { to, subject, body } = payload;
 
+        // ✅ BREVO SMTP CONFIG
         const transporter = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 465,
-          secure: true,
+          host: process.env.SMTP_HOST, // smtp-relay.brevo.com
+          port: Number(process.env.SMTP_PORT), // 587
+          secure: false, // STARTTLS for port 587
           auth: {
-            user: process.env.MAIL_USER,
-            pass: process.env.MAIL_PASS,
+            user: process.env.SMTP_USER, // 9db1ca001@smtp-brevo.com
+            pass: process.env.SMTP_PASS, // your SMTP key
           },
           tls: {
-            rejectUnauthorized: false, // 🔥 REQUIRED ON RENDER
+            rejectUnauthorized: false,
           },
-          debug: true, // 🔥 LOG SMTP ERRORS
         });
 
         await transporter.sendMail({
-          from: "Chat App",
+          from: process.env.SMTP_USER, // Brevo demands authenticated email as sender
           to,
           subject,
           text: body,
@@ -70,7 +70,7 @@ export const startSendOtpConsumer = async () => {
 // Auto-start consumer
 startSendOtpConsumer();
 
-// Dummy express server for Render
+// Dummy server for Render
 const app = express();
 const PORT = process.env.PORT || 10000;
 
