@@ -34,7 +34,7 @@ export const startSendOtpConsumer = async () => {
 
         // 🚀 Send mail using Resend API
         const response = await resend.emails.send({
-          from: "Chat App <onboarding@resend.dev>", // default sender
+          from: "Chat App <noreply@shoyub.site>", // default sender
           to,
           subject,
           text: body,
