@@ -8,7 +8,7 @@ export const startSendOtpConsumer = async () => {
     const connection = await amqp.connect({
       protocol: "amqp",
       hostname: process.env.Rabbitmq_Host,
-      port: 5672,
+      port: Number(process.env.Rabbitmq_Port) || 5672,
       username: process.env.Rabbitmq_Username,
       password: process.env.Rabbitmq_Password,
     });
@@ -23,6 +23,7 @@ export const startSendOtpConsumer = async () => {
 
     channel.consume(queueName, async (msg) => {
       if (!msg) return;
+
       const payload = JSON.parse(msg.content.toString());
 
       try {
@@ -39,27 +40,27 @@ export const startSendOtpConsumer = async () => {
         });
 
         await transporter.sendMail({
-          from: "Chat app",
+          from: "Chat App",
           to,
           subject,
           text: body,
         });
 
-        console.log(`OTP mail sent to ${to}`);
+        console.log(`📩 OTP mail sent to ${to}`);
       } catch (error) {
-        // log the error so we can inspect it, but ACK the message to avoid
-        // redelivery loops (this ensures OTPs are delivered at-most-once).
-        console.log("Failed to send otp (will ack to avoid retries)", error);
+        console.log("❌ Failed to send OTP (acknowledging anyway)", error);
       } finally {
-        // acknowledge the message regardless of send success so it isn't re-delivered
         try {
           channel.ack(msg);
         } catch (err) {
-          console.warn("Failed to ack message", err);
+          console.warn("⚠ Failed to ack message", err);
         }
       }
     });
   } catch (error) {
-    console.log("Failed to start rabbitmq consumer", error);
+    console.log("❌ Failed to start RabbitMQ consumer", error);
   }
 };
+
+// 🚀 IMPORTANT: Start the consumer automatically when the file runs
+startSendOtpConsumer();
