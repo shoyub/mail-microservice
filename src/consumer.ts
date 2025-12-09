@@ -35,8 +35,8 @@ export const startSendOtpConsumer = async () => {
           port: 465,
           secure: true,
           auth: {
-            user: process.env.USER,
-            pass: process.env.PASSWORD,
+            user: process.env.MAIL_USER,
+            pass: process.env.MAIL_PASS,
           },
           tls: {
             rejectUnauthorized: false, // 🔥 REQUIRED ON RENDER
