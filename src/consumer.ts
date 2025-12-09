@@ -1,8 +1,10 @@
 import express from "express";
 import amqp from "amqplib";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 dotenv.config();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const startSendOtpConsumer = async () => {
   try {
@@ -30,28 +32,15 @@ export const startSendOtpConsumer = async () => {
       try {
         const { to, subject, body } = payload;
 
-        // ✅ BREVO SMTP CONFIG
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST, // smtp-relay.brevo.com
-          port: Number(process.env.SMTP_PORT), // 587
-          secure: false, // STARTTLS for port 587
-          auth: {
-            user: process.env.SMTP_USER, // 9db1ca001@smtp-brevo.com
-            pass: process.env.SMTP_PASS, // your SMTP key
-          },
-          tls: {
-            rejectUnauthorized: false,
-          },
-        });
-
-        await transporter.sendMail({
-          from: `"Chat App" <${process.env.SMTP_USER}>`, // IMPORTANT FIX
+        // 🚀 Send mail using Resend API
+        const response = await resend.emails.send({
+          from: "Chat App <onboarding@resend.dev>", // default sender
           to,
           subject,
           text: body,
         });
 
-        console.log(`📩 OTP mail successfully sent to ${to}`);
+        console.log("📩 Mail sent successfully:", response);
       } catch (error) {
         console.log("❌ ERROR sending OTP:", error);
       } finally {
@@ -81,4 +70,3 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Dummy server running on port ${PORT}`);
 });
-console.log("SMTP ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
