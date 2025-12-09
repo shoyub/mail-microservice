@@ -45,7 +45,7 @@ export const startSendOtpConsumer = async () => {
         });
 
         await transporter.sendMail({
-          from: process.env.SMTP_USER, // Brevo demands authenticated email as sender
+          from: `"Chat App" <${process.env.SMTP_USER}>`, // IMPORTANT FIX
           to,
           subject,
           text: body,
