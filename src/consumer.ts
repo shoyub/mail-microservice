@@ -15,7 +15,6 @@ export const startSendOtpConsumer = async () => {
     });
 
     const channel = await connection.createChannel();
-
     const queueName = "send-otp";
 
     await channel.assertQueue(queueName, { durable: true });
@@ -26,6 +25,7 @@ export const startSendOtpConsumer = async () => {
       if (!msg) return;
 
       const payload = JSON.parse(msg.content.toString());
+      console.log("📨 Received message from queue:", payload);
 
       try {
         const { to, subject, body } = payload;
@@ -38,6 +38,10 @@ export const startSendOtpConsumer = async () => {
             user: process.env.USER,
             pass: process.env.PASSWORD,
           },
+          tls: {
+            rejectUnauthorized: false, // 🔥 REQUIRED ON RENDER
+          },
+          debug: true, // 🔥 LOG SMTP ERRORS
         });
 
         await transporter.sendMail({
@@ -47,25 +51,26 @@ export const startSendOtpConsumer = async () => {
           text: body,
         });
 
-        console.log(`📩 OTP mail sent to ${to}`);
+        console.log(`📩 OTP mail successfully sent to ${to}`);
       } catch (error) {
-        console.log("❌ Failed to send OTP (acknowledging anyway)", error);
+        console.log("❌ ERROR sending OTP:", error);
       } finally {
         try {
           channel.ack(msg);
         } catch (err) {
-          console.warn("⚠ Failed to ack message", err);
+          console.warn("⚠ Failed to ACK message:", err);
         }
       }
     });
   } catch (error) {
-    console.log("❌ Failed to start RabbitMQ consumer", error);
+    console.log("❌ Failed to start RabbitMQ consumer:", error);
   }
 };
 
-// 🚀 IMPORTANT: Start the consumer automatically when the file runs
+// Auto-start consumer
 startSendOtpConsumer();
-// Dummy server to satisfy Render port binding
+
+// Dummy express server for Render
 const app = express();
 const PORT = process.env.PORT || 10000;
 
