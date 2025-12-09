@@ -81,3 +81,4 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Dummy server running on port ${PORT}`);
 });
+console.log("SMTP ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
