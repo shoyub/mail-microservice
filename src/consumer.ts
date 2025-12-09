@@ -1,3 +1,4 @@
+import express from "express";
 import amqp from "amqplib";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
@@ -64,3 +65,14 @@ export const startSendOtpConsumer = async () => {
 
 // 🚀 IMPORTANT: Start the consumer automatically when the file runs
 startSendOtpConsumer();
+// Dummy server to satisfy Render port binding
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+app.get("/", (req, res) => {
+  res.send("Mail service is running");
+});
+
+app.listen(PORT, () => {
+  console.log(`Dummy server running on port ${PORT}`);
+});
